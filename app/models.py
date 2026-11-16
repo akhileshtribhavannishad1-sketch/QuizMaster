@@ -41,10 +41,11 @@ class Question(db.Model):
     correct_option = db.Column(db.String(1), nullable=False)
 
     def to_dict(self):
-        # The correct answer is not included on purpose
+        options = [self.option_a, self.option_b, self.option_c, self.option_d]
         return {
             "id": self.id,
             "text": self.text,
+            "options": options,
             "option_a": self.option_a,
             "option_b": self.option_b,
             "option_c": self.option_c,

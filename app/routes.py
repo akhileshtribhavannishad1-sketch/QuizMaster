@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, render_template, request
-
 from app import db
 from app.models import Attempt, Question, Quiz
 
@@ -20,6 +19,14 @@ def get_text(data, field):
     if not isinstance(value, str):
         return ""
     return value.strip()
+
+
+def normalize_option(value):
+    if isinstance(value, str):
+        return value.strip()
+    if value is None:
+        return ""
+    return str(value).strip()
 
 
 @pages.route("/")
@@ -94,8 +101,19 @@ def add_question(quiz_id):
 
     data = request.get_json(silent=True) or {}
     text = get_text(data, "text")
-    options = [get_text(data, "option_" + letter) for letter in "abcd"]
+
+    raw_options = data.get("options")
+    if isinstance(raw_options, list) and len(raw_options) == 4:
+        options = [normalize_option(item) for item in raw_options]
+    else:
+        options = [get_text(data, "option_" + letter) for letter in "abcd"]
+
     correct_option = get_text(data, "correct_option")
+    if not correct_option:
+        correct_option = get_text({"correct_answer": data.get("correct_answer")}, "correct_answer")
+    if correct_option:
+        correct_option = correct_option.upper()
+
     if not text or "" in options:
         return error("Question text and all 4 options are required", 400)
     if correct_option not in OPTIONS:
@@ -193,3 +211,20 @@ def stats():
         "total_attempts": Attempt.query.count(),
         "quizzes": quiz_stats,
     })
+@api.route('/quizzes/<int:quiz_id>/questions/<int:question_id>', methods=['DELETE'])
+def delete_question(quiz_id, question_id):
+    quiz = db.session.get(Quiz, quiz_id)
+    if not quiz:
+        return jsonify({"error": "Quiz not found"}), 404
+
+    question = db.session.get(Question, question_id)
+    if not question:
+        return jsonify({"error": "Question not found"}), 404
+
+    if question.quiz_id != quiz_id:
+        return jsonify({"error": "Question does not belong to this quiz"}), 404
+
+    db.session.delete(question)
+    db.session.commit()
+
+    return '', 204
