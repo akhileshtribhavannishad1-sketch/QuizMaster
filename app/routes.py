@@ -6,6 +6,16 @@ from app.models import Attempt, Question, Quiz
 api = Blueprint("api", __name__, url_prefix="/api")
 pages = Blueprint("pages", __name__)
 
+@api.route("/health", methods=["GET"])
+def health_check():
+    try:
+        db.session.execute(db.text("SELECT 1"))
+        return jsonify({"status": "ok"}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": "Database unavailable"}), 503
+pages = Blueprint("pages", __name__)
+
 DIFFICULTIES = ["easy", "medium", "hard"]
 OPTIONS = ["A", "B", "C", "D"]
 

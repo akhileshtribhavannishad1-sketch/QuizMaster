@@ -94,7 +94,7 @@ All endpoints are under `/api` and use JSON.
 | POST   | /api/quizzes/<id>/questions     | Add a question to a quiz                     |
 | POST   | /api/quizzes/<id>/submit        | Submit answers and get the result            |
 | GET    | /api/quizzes/<id>/leaderboard   | Top 10 attempts for a quiz                   |
-| GET    | /api/stats                      | Total quizzes, total attempts, average score per quiz |
+| GET    | /api/stats                      | Total quizzes, total attempts, average score per quiz || GET | /api/health | Check database health |
 
 Example body for submitting answers (keys are question ids):
 
