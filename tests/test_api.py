@@ -140,13 +140,6 @@ def test_leaderboard_is_sorted_and_limited(client):
 
 
 def test_stats(client):
-  def test_health_check(client):
-    response = client.get("/api/health")
-
-    assert response.status_code == 200
-    assert response.get_json() == {"status": "ok"}
-    assert response.status_code == 200
-    assert response.get_json() == {"status": "ok"}
     quiz_id = create_quiz(client)
     add_question(client, quiz_id, "B")
     question_id = client.get(f"/api/quizzes/{quiz_id}").get_json()["questions"][0]["id"]
@@ -159,8 +152,9 @@ def test_stats(client):
     assert stats["total_quizzes"] == 1
     assert stats["total_attempts"] == 1
     assert stats["quizzes"][0]["average_score"] == 1
+
+
 def test_health_check(client):
     response = client.get("/api/health")
-
     assert response.status_code == 200
     assert response.get_json() == {"status": "ok"}
