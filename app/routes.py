@@ -14,7 +14,6 @@ def health_check():
     except Exception:
         db.session.rollback()
         return jsonify({"status": "error", "message": "Database unavailable"}), 503
-pages = Blueprint("pages", __name__)
 
 DIFFICULTIES = ["easy", "medium", "hard"]
 OPTIONS = ["A", "B", "C", "D"]
