@@ -6,15 +6,6 @@ from app.models import Attempt, Question, Quiz
 api = Blueprint("api", __name__, url_prefix="/api")
 pages = Blueprint("pages", __name__)
 
-@api.route("/health", methods=["GET"])
-def health_check():
-    try:
-        db.session.execute(db.text("SELECT 1"))
-        return jsonify({"status": "ok"}), 200
-    except Exception:
-        db.session.rollback()
-        return jsonify({"status": "error", "message": "Database unavailable"}), 503
-
 DIFFICULTIES = ["easy", "medium", "hard"]
 OPTIONS = {
     "multiple_choice": ["A", "B", "C", "D"],
@@ -32,6 +23,16 @@ def get_text(data, field):
     if not isinstance(value, str):
         return ""
     return value.strip()
+
+
+@api.route("/health", methods=["GET"])
+def health_check():
+    try:
+        db.session.execute(db.text("SELECT 1"))
+        return jsonify({"status": "ok"}), 200
+    except Exception:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": "Database unavailable"}), 503
 
 
 @pages.route("/")
@@ -53,12 +54,6 @@ def result_page():
 def leaderboard_page():
     return render_template("leaderboard.html")
 
-@pages.app_errorhandler(404)
-def not_found(e):
-    if request.path.startswith("/api/"):
-        return error("Not found", 404)
-    return render_template("404.html"), 404
-
 
 @pages.route("/create")
 def create_page():
@@ -68,6 +63,13 @@ def create_page():
 @pages.route("/history")
 def history_page():
     return render_template("history.html")
+
+
+@pages.app_errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/api/"):
+        return error("Not found", 404)
+    return render_template("404.html"), 404
 
 
 @api.route("/quizzes")
@@ -138,7 +140,6 @@ def create_quiz():
     return jsonify(quiz.to_dict()), 201
 
 
-
 @api.route("/quizzes/<int:quiz_id>/questions", methods=["POST"])
 def add_question(quiz_id):
     quiz = db.session.get(Quiz, quiz_id)
@@ -157,7 +158,7 @@ def add_question(quiz_id):
     if question_type not in OPTIONS:
         return error(
             "question_type must be multiple_choice or true_false",
-            400
+            400,
         )
     options = {
         letter: get_text(data, "option_" + letter.lower())
@@ -213,11 +214,11 @@ def submit_quiz(quiz_id):
     if len(player_name) > 30:
         return error("Player name cannot exceed 30 characters", 400)
     if not isinstance(answers, dict):
-        return error("Answers must be an object like {\"1\": \"A\"}", 400)
+        return error('Answers must be an object like {"1": "A"}', 400)
     if isinstance(time_taken, bool) or not isinstance(time_taken, int) or time_taken < 0:
         return error("time_taken_seconds must be a positive number", 400)
 
-       # Answers are keyed by question id; unanswered questions count as wrong.
+    # Answers are keyed by question id; unanswered questions count as wrong.
     # Only valid options for each question type can receive credit.
     score = 0
     for question in quiz.questions:
