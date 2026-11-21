@@ -266,6 +266,20 @@ def leaderboard(quiz_id):
     return jsonify([attempt.to_dict() for attempt in attempts])
 
 
+@api.route("/players/<player_name>/attempts")
+def player_attempts(player_name):
+    name = (player_name or "").strip()
+    if not name:
+        return error("Player name is required", 400)
+
+    attempts = (
+        Attempt.query.filter(db.func.lower(Attempt.player_name) == name.lower())
+        .order_by(Attempt.id.desc())
+        .all()
+    )
+    return jsonify([attempt.to_dict() for attempt in attempts])
+
+
 @api.route("/stats")
 def stats():
     attempt_stats = (
